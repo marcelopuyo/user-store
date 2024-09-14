@@ -1,12 +1,15 @@
 import { Response } from "express";
 import { UserModel } from "../../data";
 import { CustomError, LoginUserDto, RegisterUserDto, UserEntity } from "../../domain";
-import { bcryptAdapter, JwtAdapter } from "../../config";
+import { bcryptAdapter, envs, JwtAdapter } from "../../config";
+import { EmailService } from "./email.service";
 
 
 export class AuthService {
 
-  constructor() {}
+  constructor(
+    private readonly emailService: EmailService
+  ) {}
 
   public async registerUser(registerUserDto: RegisterUserDto) {
 
@@ -22,13 +25,18 @@ export class AuthService {
 
       await user.save();
 
+      //Email de confirmacion
+      await this.sendEmailValidationLink(user.email);
 
 
-      const { password, ...userEntity} = UserEntity.fromObject(user);
+      const { password, ...userEntity } = UserEntity.fromObject(user);
+
+      const token = await JwtAdapter.generateToken({ id: user.id});
+      if (!token) throw CustomError.internalServer('Error al generar el jwt');
 
       return {
         user: userEntity,
-        token: 'aca va el token'
+        token: token
       };
       
     } catch (error) {
@@ -59,6 +67,48 @@ export class AuthService {
       throw CustomError.badRequest('Usuario o contraseña erroneo');
     };
 
+  }
+
+  private async sendEmailValidationLink(email: string) {
+
+    const token = await JwtAdapter.generateToken({ email });
+    if (!token) throw CustomError.internalServer('Error generando token');
+
+    const link = `${envs.WEBSERVICE_URL}/api/auth/validate-email/${token}`;
+
+    const html = `
+    <h1>Validacion de email</h1>
+    <p>Haga click en el siguiente link para validar su cuenta</p>
+    <a href="${link}">Valide su email: ${email}</a>
+    `;
+
+    const options = {
+      to: email,
+      subject: 'Valide su email',
+      htmlBody: html
+    };
+
+    const isSent = await this.emailService.sendEmail(options);
+    if (!isSent) throw CustomError.internalServer('Error al enviar correo de confirmacion');
+
+    return true;
+  }
+
+  public async validateEmail(token: string) {
+    console.log('entro')
+    const payload = await JwtAdapter.validateToken(token);
+    if (!payload) throw CustomError.unauthorized('Token invalido');
+
+    const { email } = payload as { email: string};
+    if (!email) throw CustomError.internalServer('Token sin email');
+
+    const user = await UserModel.findOne({ email });
+    if (!user) throw CustomError.internalServer('Email inexistente');
+
+    user.emailValidated = true;
+    await user.save();
+
+    return true;
   }
 
 }

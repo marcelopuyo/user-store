@@ -11,7 +11,7 @@ export class AuthController {
     if (error instanceof CustomError) {
       return res.status(error.statusCode).json({error: error.message});
     } else {
-      return res.status(500).json({error: 'Internal error'});
+      return res.status(500).json({error: 'Internal server error'});
       console.log(error);
     };
   };
@@ -38,7 +38,12 @@ export class AuthController {
   };
 
   validateEmail = (req: Request, res: Response) => {
-    res.json('validateEmail');
+
+    const { token } = req.params;
+console.log('entro al controller')
+    this.authService.validateEmail(token)
+    .then((resp) => res.json('Email validado'))
+    .catch((error) => this.handleError(error, res));
   };
 
 
