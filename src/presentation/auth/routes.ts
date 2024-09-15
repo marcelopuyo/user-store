@@ -16,10 +16,10 @@ export class AuthRoutes {
     const emailService = new EmailService(
       envs.MAILER_SERVICE,
       envs.MAILER_EMAIL,
-      envs.MAILER_SECRET_KEY
+      envs.MAILER_SECRET_KEY,
+      envs.MAILER_SEND_EMAIL
     );
     const authService = new AuthService(emailService);
-    console.log('entro en routes')
 
     const controller = new AuthController(authService);
     
