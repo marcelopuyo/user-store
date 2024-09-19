@@ -15,10 +15,6 @@ export class TypeMiddleware {
   
       next();
     }
-
-
-
-
   }
 }
 

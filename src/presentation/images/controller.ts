@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import rs from 'fs';
+import fs from 'fs';
 import path from 'path';
 
 
@@ -15,7 +15,7 @@ export class ImageController {
 
     const imagePath = path.resolve(__dirname, `../../../uploads/${type}/${img}`);
 
-    if (!rs.existsSync(imagePath)) {
+    if (!fs.existsSync(imagePath)) {
       return res.status(404).json('Imagen no encontrada');
     }
 

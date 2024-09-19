@@ -30,10 +30,6 @@ import { CustomError } from "../../domain";
       try {
         const fileExtension = file.mimetype.split('/').at(1) ?? '';
 
-        if (!validExtensions.includes(fileExtension)) {
-          throw CustomError.badRequest(`Extension invalida: ${ fileExtension }`);
-        }
-
         const destination = path.resolve(__dirname, '../../../', folder);
         this.checkFolder(destination);
 

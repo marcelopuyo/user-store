@@ -16,6 +16,7 @@ export class FileUploasRoutes {
     const controller = new FileUploadController(new FileUploadService);
 
     router.use(FileUploadMiddleware.containFiles);
+    router.use(FileUploadMiddleware.validateTypes());
     router.use(TypeMiddleware.validateTypes(['users', 'products', 'categories']));
     
     // Definir las rutas
